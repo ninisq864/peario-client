@@ -128,10 +128,17 @@ const onSubtitlesDropped = (event) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     store.commit('player/updateLockState', true);
     store.commit('player/updateVideo', videoRef.value);
     videoRef.value.volume = volume.value;
+
+    // Auto-load HLS via Stremio proxy if available (bypasses mixed content & CORS issues)
+    if (props.options && props.options.hls) {
+        const { default: HlsService } = await import('@/services/hls.service');
+        HlsService.init();
+        await HlsService.loadHls(props.options.hls, videoRef.value);
+    }
 });
 
 onUnmounted(() => {

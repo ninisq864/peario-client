@@ -4,6 +4,7 @@ import StorageService from "@/services/storage.service";
 
 // URLs à tester dans l'ordre
 const CANDIDATE_URLS = [
+    'https://localhost:12470',
     'http://localhost:11470',
     'http://127.0.0.1:11470',
 ];
