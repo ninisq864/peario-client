@@ -104,9 +104,9 @@ const onUpdateOwnership = (userId) => {
     ClientService.send('room.updateOwnership', { userId });
 };
 
-watch(clientRoomState, () => {
-    syncRoom().catch(e => console.error('syncRoom error:', e));
-}, { immediate: true });
+watch(clientRoomState, (newVal) => {
+    if (newVal) syncRoom().catch(e => console.error('syncRoom error:', e));
+});
 
 let syncPlayerInterval = null;
 
