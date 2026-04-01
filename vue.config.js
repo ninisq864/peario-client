@@ -4,6 +4,7 @@ const { version } = require('./package.json');
 
 module.exports = defineConfig({
     publicPath: process.env.NODE_ENV === 'production' ? '/peario-client/' : '/',
+    lintOnSave: false,
     configureWebpack: {
         resolve: {
             fallback: {
