@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const { version } = require('./package.json');
 
 module.exports = defineConfig({
+    publicPath: process.env.NODE_ENV === 'production' ? '/peario-client/' : '/',
     configureWebpack: {
         resolve: {
             fallback: {
@@ -22,11 +23,6 @@ module.exports = defineConfig({
                 'process.env.PACKAGE_VERSION': JSON.stringify(version),
             })
         ],
-        devServer: {
-            client: {
-                overlay: false,
-            },
-        },
     },
     css: {
         loaderOptions: {
