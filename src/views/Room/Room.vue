@@ -118,7 +118,14 @@ let syncPlayerInterval = null;
 
 onMounted(() => {
     const { id } = router.currentRoute.value.params;
-    ClientService.send('room.join', { id });
+
+    if (clientState.value.ready) {
+        ClientService.send('room.join', { id });
+    } else {
+        ClientService.events.once('ready', () => {
+            ClientService.send('room.join', { id });
+        });
+    }
     
     syncPlayerInterval = setInterval(() => {
         if (playerState.value.video && !playerState.value.paused) {
