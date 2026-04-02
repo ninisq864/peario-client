@@ -91,18 +91,22 @@ const openInStremio = () => {
     
     let stremioUrl = null;
 
-    // Si c'est un torrent, on ouvre via l'infoHash
-    if (stream?.infoHash) {
-        stremioUrl = `stremio://detail/${meta?.type || 'movie'}/${meta?.id || ''}`;
-    } else if (meta?.type && meta?.id) {
+    if (meta?.type && meta?.id) {
         stremioUrl = `stremio://detail/${meta.type}/${meta.id}`;
+    } else if (stream?.infoHash) {
+        stremioUrl = `stremio://detail/movie/${stream.infoHash}`;
     }
 
     if (stremioUrl) {
-        // location.href fonctionne mieux que window.open pour les protocoles custom
-        window.location.href = stremioUrl;
+        // Créer un lien invisible et le cliquer — seule méthode fiable pour stremio://
+        const a = document.createElement('a');
+        a.href = stremioUrl;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
     } else if (stream?.url) {
-        window.location.href = stream.url;
+        window.open(stream.url, '_blank');
     }
 };
 
