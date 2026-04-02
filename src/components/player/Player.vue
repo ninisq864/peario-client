@@ -16,7 +16,7 @@
 
         <Subtitle v-if="videoRef" :timecode="currentTime" :controlsShown="!controlsHidden"></Subtitle>
 
-        <video ref="videoRef" :src="options.src" :poster="options.meta.background"
+        <video ref="videoRef" :poster="options.meta.background"
             @click="showControls"
             @timeupdate="updateCurrentTime"
             @waiting="() => updateBuffering(true)"
@@ -29,7 +29,6 @@
 
             <div class="panel">
                 <PlayPauseControl class="control" :options="options" @change="onPlayerChange()"></PlayPauseControl>
-
                 <div class="timer control" v-to-timer="currentTime"></div>
             </div>
 
@@ -50,6 +49,7 @@
 <script setup>
 import { computed, onMounted, ref, watch, onUnmounted } from 'vue';
 import store from '@/store';
+import HlsService from '@/services/hls.service';
 
 import LockScreen from "./LockScreen.vue";
 import Subtitle from "./Subtitle.vue";
@@ -105,7 +105,7 @@ const hideControls = () => {
 
 const onPlayerChange = () => {
     if (paused.value) showControls();
-        emit('change');
+    emit('change');
 };
 
 const updateBuffering = (value) => {
@@ -119,7 +119,6 @@ const updateCurrentTime = () => {
 
 const onSubtitlesDropped = (event) => {
     event.preventDefault();
-
     const { files } = event.dataTransfer;
     if (files.length) {
         const file = files[0];
@@ -133,9 +132,8 @@ onMounted(async () => {
     store.commit('player/updateVideo', videoRef.value);
     videoRef.value.volume = volume.value;
 
-    // Auto-load HLS via Stremio proxy if available (bypasses mixed content & CORS issues)
+    // Auto-load via HLS proxy (Stremio) to bypass CORS/mixed content
     if (props.options && props.options.hls) {
-        const { default: HlsService } = await import('@/services/hls.service');
         HlsService.init();
         await HlsService.loadHls(props.options.hls, videoRef.value);
     }
@@ -145,6 +143,7 @@ onUnmounted(() => {
     store.commit('player/updateVideo', null);
     clearTimeout(hideTimeout);
     hideTimeout = null;
+    try { HlsService.clear(); } catch(e) {}
 });
 </script>
 

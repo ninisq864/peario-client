@@ -52,31 +52,38 @@ const usersList = computed(() => clientRoomState.value && clientState.value.room
 const isUserOwner = computed(() => clientState.value && clientState.value.user && clientState.value.user.id ? roomOwner.value === clientState.value.user.id : false);
 
 const syncRoom = async () => {
-    if (!clientState.value.room) return;
     const { stream, meta, player, owner } = clientState.value.room;
 
     playerOptions.value = {
         ...playerOptions.value,
         meta,
-        isOwner: clientState.value.user && clientState.value.user.id === owner,
+        isOwner: clientState.value.user.id === owner,
     };
 
     if (!initialized.value) {
         const isTorrentStream = stream.infoHash != null;
         const videoUrl = isTorrentStream ? await StremioService.createTorrentStream(stream) : stream.url;
+        
+        // Always use HLS via Stremio as proxy to avoid CORS/mixed content issues
         const playlistUrl = await HlsService.createPlaylist(videoUrl);
+        
         playerOptions.value = {
             ...playerOptions.value,
             src: videoUrl,
             hls: playlistUrl,
         };
+
         initialized.value = true;
     }
 
     if (playerState.value.autoSync && playerState.value.video && !playerState.value.locked) {
         const { paused, buffering, time } = player;
+
         const unsync = time - playerState.value.video.currentTime;
-        if (unsync > 1 || unsync < -1) playerState.value.video.currentTime = time;
+        if (unsync > 1 || unsync < -1) {
+            playerState.value.video.currentTime = time;
+        }
+
         paused ? playerState.value.video.pause() : playerState.value.video.play();
         store.commit('player/updatePaused', playerState.value.video.paused);
         playerState.value.buffering = buffering;
@@ -104,26 +111,10 @@ watch(clientRoomState, (newVal) => {
 
 let syncPlayerInterval = null;
 
-const doJoinRoom = (id) => {
-    ClientService.send('room.join', { id });
-};
-
 onMounted(() => {
     const { id } = router.currentRoute.value.params;
-
-    // Toujours envoyer room.join pour s'enregistrer dans la room côté serveur
-    // (aussi pour le créateur, pour qu'il soit bien dans la liste des users)
-    if (clientState.value.ready) {
-        doJoinRoom(id);
-    } else {
-        ClientService.events.once('ready', () => doJoinRoom(id));
-    }
-
-    // Si on est déjà créateur et qu'on a la room, on sync directement aussi
-    if (clientRoomState.value && clientRoomState.value.id === id) {
-        syncRoom().catch(e => console.error('syncRoom error:', e));
-    }
-
+    ClientService.send('room.join', { id });
+    
     syncPlayerInterval = setInterval(() => {
         if (playerState.value.video && !playerState.value.paused) {
             syncPlayer();

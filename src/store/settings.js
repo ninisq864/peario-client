@@ -6,7 +6,8 @@ export default {
     state: {
         locale: 'en',
         locales: Object.keys(locales),
-        username: null
+        username: null,
+        streamingServer: null
     },
     mutations: {
         updateLocale(state, value) {
@@ -14,14 +15,19 @@ export default {
         },
         updateUsername(state, value) {
             state.username = value;
+        },
+        updateStreamingServer(state, value) {
+            state.streamingServer = value;
         }
     },
     actions: {
         load({ commit }) {
             const storedLocale = StorageService.get('locale');
             const storedUsername = StorageService.get('username');
+            const storedServer = StorageService.get('streamingServer');
             if (storedLocale) commit('updateLocale', storedLocale);
             if (storedUsername) commit('updateUsername', storedUsername);
+            if (storedServer) commit('updateStreamingServer', storedServer);
         },
         updateLocale({ commit }, value) {
             commit('updateLocale', value);
@@ -30,6 +36,10 @@ export default {
         updateUsername({ commit }, value) {
             commit('updateUsername', value);
             StorageService.set('username', value);
+        },
+        updateStreamingServer({ commit }, value) {
+            commit('updateStreamingServer', value);
+            StorageService.set('streamingServer', value);
         }
     }
 };

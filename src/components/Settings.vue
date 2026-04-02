@@ -22,10 +22,17 @@
                 </div>
                 <div class="setting">
                     <div class="label">
-                        <ion-icon name="heart"></ion-icon>
-                        {{ $t('components.settings.support') }}
+                        <ion-icon name="server-outline"></ion-icon>
+                        Stremio Streaming Server URL
                     </div>
-                    <div class="support" ref="support"></div>
+                    <ATextInput 
+                        :value="settings.streamingServer || ''" 
+                        placeholder="https://192-168-x-x..."
+                        @change="updateStreamingServer($event)" 
+                    />
+                    <div class="hint">
+                        Stremio → Paramètres → Lecteur vidéo → Streaming → copie l'URL distante HTTPS
+                    </div>
                 </div>
                 <div class="setting">
                     <div class="label">
@@ -43,8 +50,6 @@
 
 <script>
 import { ref, watchEffect } from 'vue';
-import postscribe from 'postscribe';
-import ClientService from '../services/client.service';
 
 import { where } from 'langs';
 import ATitle from './ui/Title.vue';
@@ -52,6 +57,7 @@ import AButton from './ui/Button.vue';
 import ASelect from './ui/Select.vue';
 import ATextInput from './ui/TextInput.vue';
 import ALink from './ui/Link.vue';
+import ClientService from '../services/client.service';
 
 import store from '../store';
 
@@ -93,43 +99,15 @@ export default {
                 ClientService.send('user.update', { username });
             }
         },
+        updateStreamingServer({ target }) {
+            const url = target.value.trim().replace(/\/$/, '');
+            if (url.length > 0) {
+                store.dispatch('settings/updateStreamingServer', url);
+            }
+        },
         close() {
             this.$emit('update:show', !this.show);
         }
-    },
-    setup() {
-        const support = ref(null);
-
-        const buymeacoffee = document.createElement('script');
-        buymeacoffee.setAttribute('src', 'https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js');
-        buymeacoffee.setAttribute('data-name', 'bmc-button');
-        buymeacoffee.setAttribute('data-slug', 'tymmesyde');
-        buymeacoffee.setAttribute('data-color', '#FFDD00');
-        buymeacoffee.setAttribute('data-emoji', '');
-        buymeacoffee.setAttribute('data-font', 'Cookie');
-        buymeacoffee.setAttribute('data-text', 'Buy me a coffee');
-        buymeacoffee.setAttribute('data-outline-color', '#000000');
-        buymeacoffee.setAttribute('data-font-color', '#000000');
-        buymeacoffee.setAttribute('data-coffee-color', '#ffffff');
-        buymeacoffee.setAttribute('async', true);
-
-        const kofiscript = document.createElement('script');
-        kofiscript.setAttribute('src', 'https://storage.ko-fi.com/cdn/widget/Widget_2.js');
-
-        const kofibuton = document.createElement('script');
-        kofibuton.text = 'kofiwidget2.init(\'Support Me on Ko-fi\', \'#29abe0\', \'G2G85BB77\');kofiwidget2.draw();';
-
-        watchEffect(() => {
-            if (support.value) {
-                postscribe(support.value, buymeacoffee.outerHTML);
-                postscribe(support.value, kofiscript.outerHTML);
-                postscribe(support.value, kofibuton.outerHTML);
-            }
-        });
-
-        return {
-            support
-        };
     }
 }
 </script>
@@ -189,15 +167,17 @@ export default {
             color: $text-color;
         }
 
+        .hint {
+            margin-top: 5px;
+            font-size: 12px;
+            opacity: 0.6;
+            color: $text-color;
+            font-family: 'Montserrat-Regular';
+        }
+
         input {
             width: 100%;
         }
-    }
-
-    .support {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
     }
 }
 
@@ -215,13 +195,6 @@ export default {
         .inner {
             width: auto !important;
             min-width: 350px;
-        }
-    }
-
-    .setting {
-
-        .support {
-            flex-direction: row;
         }
     }
 }
