@@ -53,7 +53,6 @@ const isUserOwner = computed(() => clientState.value && clientState.value.user &
 
 const syncRoom = async () => {
     if (!clientState.value.room) return;
-
     const { stream, meta, player, owner } = clientState.value.room;
 
     playerOptions.value = {
@@ -77,9 +76,7 @@ const syncRoom = async () => {
     if (playerState.value.autoSync && playerState.value.video && !playerState.value.locked) {
         const { paused, buffering, time } = player;
         const unsync = time - playerState.value.video.currentTime;
-        if (unsync > 1 || unsync < -1) {
-            playerState.value.video.currentTime = time;
-        }
+        if (unsync > 1 || unsync < -1) playerState.value.video.currentTime = time;
         paused ? playerState.value.video.pause() : playerState.value.video.play();
         store.commit('player/updatePaused', playerState.value.video.paused);
         playerState.value.buffering = buffering;
@@ -101,33 +98,31 @@ const onUpdateOwnership = (userId) => {
     ClientService.send('room.updateOwnership', { userId });
 };
 
-// Déclenché à chaque fois que la room change (sync du serveur)
 watch(clientRoomState, (newVal) => {
     if (newVal) syncRoom().catch(e => console.error('syncRoom error:', e));
 });
 
 let syncPlayerInterval = null;
 
-const joinRoom = () => {
-    const { id } = router.currentRoute.value.params;
-
-    // Si on a déjà la room (créateur), on lance syncRoom directement sans room.join
-    if (clientRoomState.value && clientRoomState.value.id === id) {
-        syncRoom().catch(e => console.error('syncRoom error:', e));
-    } else {
-        // Joiner : on attend que le WS soit prêt avant d'envoyer room.join
-        if (clientState.value.ready) {
-            ClientService.send('room.join', { id });
-        } else {
-            ClientService.events.once('ready', () => {
-                ClientService.send('room.join', { id });
-            });
-        }
-    }
+const doJoinRoom = (id) => {
+    ClientService.send('room.join', { id });
 };
 
 onMounted(() => {
-    joinRoom();
+    const { id } = router.currentRoute.value.params;
+
+    // Toujours envoyer room.join pour s'enregistrer dans la room côté serveur
+    // (aussi pour le créateur, pour qu'il soit bien dans la liste des users)
+    if (clientState.value.ready) {
+        doJoinRoom(id);
+    } else {
+        ClientService.events.once('ready', () => doJoinRoom(id));
+    }
+
+    // Si on est déjà créateur et qu'on a la room, on sync directement aussi
+    if (clientRoomState.value && clientRoomState.value.id === id) {
+        syncRoom().catch(e => console.error('syncRoom error:', e));
+    }
 
     syncPlayerInterval = setInterval(() => {
         if (playerState.value.video && !playerState.value.paused) {
