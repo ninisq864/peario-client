@@ -89,12 +89,20 @@ const shareUrl = computed(() => window.location.href);
 const openInStremio = () => {
     const { meta, stream } = clientState.value.room;
     
-    // Try stremio:// protocol to open in Stremio desktop
-    if (meta?.type && meta?.id) {
-        const videoId = meta.id;
-        window.open(`stremio://detail/${meta.type}/${videoId}`);
+    let stremioUrl = null;
+
+    // Si c'est un torrent, on ouvre via l'infoHash
+    if (stream?.infoHash) {
+        stremioUrl = `stremio://detail/${meta?.type || 'movie'}/${meta?.id || ''}`;
+    } else if (meta?.type && meta?.id) {
+        stremioUrl = `stremio://detail/${meta.type}/${meta.id}`;
+    }
+
+    if (stremioUrl) {
+        // location.href fonctionne mieux que window.open pour les protocoles custom
+        window.location.href = stremioUrl;
     } else if (stream?.url) {
-        window.open(stream.url);
+        window.location.href = stream.url;
     }
 };
 
