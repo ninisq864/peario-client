@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const { version } = require('./package.json');
 
 module.exports = defineConfig({
-    publicPath: process.env.NODE_ENV === 'production' ? '/peario-client/' : '/',
+    publicPath: '/',
     lintOnSave: false,
     configureWebpack: {
         resolve: {
