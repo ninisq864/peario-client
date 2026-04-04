@@ -28,25 +28,16 @@ module.exports = defineConfig({
     css: {
         loaderOptions: {
             sass: {
-                additionalData: `
-                    @import "src/assets/styles/variables.scss";
-                `
+                additionalData: `@import "src/assets/styles/variables.scss";`
             }
         }
     },
     chainWebpack: config => {
-        config.module
-            .rule('vue')
-            .use('vue-loader')
-            .tap(options => ({
-                ...options,
-                compilerOptions: {
-                    isCustomElement: (tag) => tag === 'ion-icon'
-                }
-            }));
+        config.module.rule('vue').use('vue-loader').tap(options => ({
+            ...options,
+            compilerOptions: { isCustomElement: (tag) => tag === 'ion-icon' }
+        }));
     },
-    transpileDependencies: [
-        'vue-meta',
-    ],
+    transpileDependencies: ['vue-meta'],
     productionSourceMap: false,
 });

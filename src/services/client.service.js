@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 
 const ClientService = {
-
     socket: null,
     heartbeat: null,
     events: new EventEmitter,
@@ -32,7 +31,6 @@ const ClientService = {
         const { type, payload } = JSON.parse(data);
         return { type, payload };
     }
-
 };
 
 export default ClientService;

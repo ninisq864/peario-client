@@ -1,14 +1,11 @@
 import Hls from 'hls.js';
 import hat from 'hat';
-import StorageService from '@/services/storage.service';
+
+const STREMIO_URL = "http://localhost:11470";
 
 const HlsService = {
 
     hls: null,
-
-    getServerUrl() {
-        return StorageService.get('streamingServer') || 'https://localhost:12470';
-    },
 
     init() {
         this.hls = new Hls({
@@ -19,8 +16,6 @@ const HlsService = {
 
     async createPlaylist(mediaURL) {
         const id = hat();
-        const server = this.getServerUrl();
-
         const queryParams = new URLSearchParams([
             ['mediaURL', mediaURL],
             ['videoCodecs', 'h264'],
@@ -30,8 +25,7 @@ const HlsService = {
             ['audioCodecs', 'opus'],
             ['maxAudioChannels', 2],
         ]);
-
-        return `${server}/hlsv2/${id}/master.m3u8?${queryParams.toString()}`;
+        return `${STREMIO_URL}/hlsv2/${id}/master.m3u8?${queryParams.toString()}`;
     },
 
     loadHls(playlistUrl, videoElement) {
@@ -43,10 +37,11 @@ const HlsService = {
     },
 
     clear() {
-        this.hls.detachMedia();
-        this.hls.destroy();
+        try {
+            this.hls.detachMedia();
+            this.hls.destroy();
+        } catch(e) {}
     }
-
 };
 
 export default HlsService;

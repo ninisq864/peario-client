@@ -1,16 +1,13 @@
 import axios from "axios";
 import { CINEMETA_URL, OPENSUBTITLES_URL, STREMIO_API_URL } from "@/common/config";
-import StorageService from "@/services/storage.service";
+
+const STREMIO_URL = "http://localhost:11470";
 
 const StremioService = {
 
-    getServerUrl() {
-        return StorageService.get('streamingServer') || 'https://localhost:12470';
-    },
-
     async isServerOpen() {
         try {
-            await axios.get(`${this.getServerUrl()}/stats.json`, { timeout: 3000 });
+            await axios.get(`${STREMIO_URL}/stats.json`, { timeout: 3000 });
             return true;
         } catch {
             return false;
@@ -44,34 +41,22 @@ const StremioService = {
 
     async createTorrentStream(stream) {
         let { infoHash, fileIdx = null } = stream;
-        const server = this.getServerUrl();
-        const { data } = await axios.get(`${server}/${infoHash}/create`);
+        const { data } = await axios.get(`${STREMIO_URL}/${infoHash}/create`);
         const { files } = data;
         if (!fileIdx) fileIdx = files.indexOf(files.sort((a, b) => a.length - b.length).reverse()[0]);
-        return `${server}/${infoHash}/${fileIdx}`;
+        return `${STREMIO_URL}/${infoHash}/${fileIdx}`;
     },
 
     async getSubtitles({ type, id, url }) {
         try {
-            const { hash } = await getOpenSubInfo(url);
-            return queryOpenSubtitles({ type, id, videoHash: hash });
+            const { data } = await axios.get(`${STREMIO_URL}/opensubHash?videoUrl=${url}`);
+            const { hash } = data.result;
+            const subs = await axios.get(`${OPENSUBTITLES_URL}/subtitles/${type}/${id}/videoHash=${hash}.json`);
+            return subs.data.subtitles;
         } catch(_) {
             return [];
         }
     }
-
 };
-
-async function getOpenSubInfo(streamUrl) {
-    const { data } = await axios.get(`${StremioService.getServerUrl()}/opensubHash?videoUrl=${streamUrl}`);
-    const { result } = data;
-    return result;
-}
-
-async function queryOpenSubtitles({ type, id, videoHash }) {
-    const { data } = await axios.get(`${OPENSUBTITLES_URL}/subtitles/${type}/${id}/videoHash=${videoHash}.json`);
-    const { subtitles } = data;
-    return subtitles;
-}
 
 export default StremioService;

@@ -1,12 +1,6 @@
 module.exports = {
   root: true,
-  env: {
-    node: true,
-  },
-  extends: [
-    'plugin:vue/vue3-essential',
-  ],
-  rules: {
-    'vue/multi-word-component-names': 'off',
-  }
+  env: { node: true },
+  extends: ['plugin:vue/vue3-essential'],
+  rules: { 'vue/multi-word-component-names': 'off' }
 }
